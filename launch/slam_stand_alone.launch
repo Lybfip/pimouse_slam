@@ -1,0 +1,46 @@
+<launch>
+    <node pkg="pimouse_slam" name="keyboard_cmd_vel" type="keyboard_cmd_vel.py" required="true" />
+    <node pkg="pimouse_slam" name="motors" type="motors.py" required="true" />
+
+    <node name="ydlidar_node"   pkg="ydlidar"   type="ydlidar_node" output="screen" respawn="false" >
+        <param name="port"          type="string"   value="/dev/ydlidar" />
+        <param name="frame_id"      type="string"   value="base_link" />    <!-- valueをlaser_frameからbase_linkに変更 -->
+        <param name="resolution_fixed"  type="bool" value="true" />
+        <param name="auto_reconnect"    type="bool" value="true" />
+        <param name="reversion"     type="bool"     value="false" />
+        <param name="sun_noise"     type="bool"     value="true" />
+        <param name="glass_noise"   type="bool"     value="true" />
+        <param name="angle_min"     type="double"   value="-180" />
+        <param name="angle_max"     type="double"   value="180" />
+        <param name="range_min"     type="double"   value="0.1" />
+        <param name="range_max"     type="double"   value="12.0" />
+        <param name="ignore_array"  type="string"   value="" />
+        <param name="max_abnormal_check_count"  type="int"  value="2" />
+    </node>
+    <node pkg="tf" type="static_transform_publisher" name="base_link_to_laser4"
+        args="0.2245 0.0 0.2 0.0 0.0  0.0 /base_footprint /base_link 40" />   <!-- /laser_frame から /base_link に変更 -->
+
+    <!--
+    <node pkg="urg_node" name="urg_node" type="urg_node" required="true" >
+        <param name="frame_id" value="base_link" />
+    </node>
+    -->
+
+    <arg name="scan_topic" default="/scan" />   <!-- スキャンデータが入手できるトピックの名前 -->
+    <arg name="odom_topic" default="/odom" />   <!-- オドメトリデータが入手できるトピックの名前 -->
+
+    <node pkg="gmapping" type="slam_gmapping" name="slam_gmapping" output="screen" >    <!-- Gmapping の設定 -->
+        <param name="base_frame" value="base_link" />   <!-- 利用するベースフレームを明記 -->
+        <param name="odom_frame" value="odom" />        <!-- 利用するオドメトリフレームを明記 -->
+
+        <param name="maxUrange" value="4.0" />  <!-- LiDAR のレーザの範囲を設定 これより大きな値は打ち切る -->
+        <param name="maxRange"  value="4.0" />  <!-- この値以内ならばその間に障害物がないと信用できる -->
+
+        <param name="srr" value="0.3" />    <!-- 直進1mあたりの直進方向の誤差[m] -->
+        <param name="srt" value="0.1" />    <!-- 回転1radあたりの直進方向の誤差[m] -->
+        <param name="str" value="0.1" />    <!-- 直進1mあたりの回転方向の誤差[rad] -->
+        <param name="stt" value="0.3" />    <!-- 回転1radあたりの回転方向の誤差[rad] -->
+
+        <param name="particles" value="100" />  <!-- 地図の候補を作る数 -->
+    </node>
+</launch>
